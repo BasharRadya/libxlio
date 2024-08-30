@@ -340,6 +340,12 @@ bool steering_handler<KEY4T, KEY2T, HDR>::attach_flow(flow_tuple &flow_spec_5t, 
                 dst_port_filter =
                     new rfs_rule_filter(m_ring.m_tcp_dst_port_attach_map, rule_key, tcp_3t_only);
             }
+            if (safe_mce_sys().tcp_2t_rules) {
+                flow_tuple tcp_2t_only(flow_spec_5t.get_dst_ip(), 0, ip_address::any_addr(), 0,
+                                       flow_spec_5t.get_protocol(), flow_spec_5t.get_family());
+                dst_port_filter =
+                    new rfs_rule_filter(m_ring.m_tcp_dst_port_attach_map, rule_key, tcp_2t_only);
+            }
             try {
                 if (safe_mce_sys().gro_streams_max && m_ring.is_simple()) {
                     p_tmp_rfs = new (std::nothrow)
