@@ -329,6 +329,7 @@ bool cq_mgr_rx::request_more_buffers()
 
 void cq_mgr_rx::return_extra_buffers()
 {
+    return;
     if (m_rx_pool.size() < m_n_sysvar_qp_compensation_level * 2) {
         return;
     }

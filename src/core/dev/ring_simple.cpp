@@ -934,6 +934,7 @@ mem_buf_desc_t *ring_simple::get_tx_buffers(pbuf_type type, uint32_t n_num_mem_b
 
 void ring_simple::return_to_global_pool()
 {
+    return;
     if (unlikely(m_tx_pool.size() > (m_tx_num_bufs / 2) &&
                  m_tx_num_bufs >= RING_TX_BUFS_COMPENSATE * 2)) {
         int return_bufs = m_tx_pool.size() / 2;
