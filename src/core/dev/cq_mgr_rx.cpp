@@ -374,7 +374,11 @@ bool cq_mgr_rx::compensate_qp_poll_success(mem_buf_desc_t *buff_cur)
 {
     // Assume locked!!!
     // Compensate QP for all completions that we found
-    if (m_rx_pool.size() || request_more_buffers()) {
+    bool bashar_test=true;
+    if (m_rx_pool.size() < m_n_sysvar_qp_compensation_level) {
+        bashar_test=request_more_buffers();
+    }
+    if (m_rx_pool.size() || bashar_test) {
         size_t buffers = std::min<size_t>(m_debt, m_rx_pool.size());
         m_hqrx_ptr->post_recv_buffers(&m_rx_pool, buffers);
         m_debt -= buffers;
