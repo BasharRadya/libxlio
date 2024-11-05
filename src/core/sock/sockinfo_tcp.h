@@ -693,6 +693,19 @@ private:
     bool m_b_xlio_socket_dirty = false;
     uintptr_t m_xlio_socket_userdata = 0;
     poll_group *m_p_group = nullptr;
+    
+    
+    
+    
+    
+    public:
+    //BIO
+    std::deque<xlio_buf*> m_rx_ready_list_bio_buf;
+    size_t m_rx_ready_list_bio_buf_offset;
+    std::deque<int> m_rx_ready_list_bio_len;
+    size_t data_in_bio;
+    lock_spin_recursive m_rx_ready_list_bio_buf_lock;
+
 };
 
 #endif

@@ -60,6 +60,8 @@
 #include "bind_no_port.h"
 #include "xlio.h"
 
+#include <openssl/bio.h>
+
 #define UNLOCK_RET(_ret)                                                                           \
     unlock_tcp_con();                                                                              \
     return _ret;
@@ -298,6 +300,9 @@ sockinfo_tcp::sockinfo_tcp(int fd, int domain)
     , m_sysvar_rx_poll_on_tx_tcp(safe_mce_sys().rx_poll_on_tx_tcp)
     , m_user_huge_page_mask(~((uint64_t)safe_mce_sys().user_huge_page_size - 1))
 {
+    //bashar add
+    m_rx_ready_list_bio_buf_offset=0;
+    data_in_bio=0;
     si_tcp_logfuncall("");
 
     m_ops = m_ops_tcp = new sockinfo_tcp_ops(this);
@@ -575,6 +580,13 @@ sockinfo_tcp::~sockinfo_tcp()
     }
     if (m_tcp_seg_list) {
         g_tcp_seg_pool->put_objs(m_tcp_seg_list);
+    }
+    // Remove buffers for BIO layer
+    while (!m_rx_ready_list_bio_buf.empty()) {
+        xlio_buf *buf = m_rx_ready_list_bio_buf.front();
+        m_rx_ready_list_bio_buf.pop_front();
+        m_rx_ready_list_bio_len.pop_front();
+        xlio_socket_buf_free(m_fd, buf);
     }
 
     while (!m_socket_options_list.empty()) {
@@ -6369,4 +6381,123 @@ size_t sockinfo_tcp::handle_msg_trunc(size_t total_rx, size_t payload_size, int 
     NOT_IN_USE(in_flags);
     *p_out_flags &= ~MSG_TRUNC; // don't handle msg_trunc
     return total_rx;
+}
+
+
+
+
+static int custom_bio_write(BIO *bio, const char *buf, int len) {
+
+    xlio_socket_t xlio_sock = (xlio_socket_t)BIO_get_data(bio);
+    struct xlio_socket_send_attr sattr = {
+    .flags = XLIO_SOCKET_SEND_FLAG_INLINE | XLIO_SOCKET_SEND_FLAG_FLUSH ,
+    .mkey = 0,  //we are not using zero copy
+    .userdata_op = 0, //0 because userdata_ip cb is noted called when INLINE
+    };
+    int rc = xlio_socket_send(xlio_sock, buf , len , &sattr);
+    if(rc <0) {
+         //BIO_set_retry_write(bio);
+    }
+    return len;
+}
+
+
+
+static int custom_bio_read(BIO *bio, char *buf, int len) {
+    xlio_socket_t xlio_sock = (xlio_socket_t)BIO_get_data(bio);
+    sockinfo_tcp *si = reinterpret_cast<sockinfo_tcp *>(xlio_sock);
+    si->m_rx_ready_list_bio_buf_lock.lock();
+    
+    size_t read_till_now=0;
+    if(si->m_rx_ready_list_bio_buf.empty()) {
+        BIO_set_retry_read(bio);
+        si->m_rx_ready_list_bio_buf_lock.unlock();
+        return read_till_now;
+    }
+    xlio_buf *buf_tmp = si->m_rx_ready_list_bio_buf.front();
+    void *data = (void*)(buf_tmp->userdata);
+    size_t data_len = si->m_rx_ready_list_bio_len.front();
+    while(read_till_now<(size_t)len){
+        size_t fetch_data=std::min(data_len-si->m_rx_ready_list_bio_buf_offset, len-read_till_now);
+        memcpy(buf+read_till_now, ((char*)data)+si->m_rx_ready_list_bio_buf_offset, fetch_data);
+        read_till_now+=fetch_data;
+        si->m_rx_ready_list_bio_buf_offset+=fetch_data;
+        if(si->m_rx_ready_list_bio_buf_offset==data_len){
+                si->m_rx_ready_list_bio_buf.pop_front();
+                si->m_rx_ready_list_bio_len.pop_front();
+                si->m_rx_ready_list_bio_buf_offset=0;
+                si->data_in_bio-=data_len;
+                xlio_socket_buf_free(xlio_sock, buf_tmp);
+                if(si->m_rx_ready_list_bio_buf.empty() || (read_till_now>=(size_t)len)) {
+                break;
+                }
+                buf_tmp = si->m_rx_ready_list_bio_buf.front();
+                data = (void*)(buf_tmp->userdata);
+                data_len = si->m_rx_ready_list_bio_len.front();
+        }
+    }
+    si->m_rx_ready_list_bio_buf_lock.unlock();
+    return read_till_now;
+}
+
+
+static int custom_bio_new(BIO *bio) {
+    BIO_set_init(bio, 1); // declare that BIO is ready
+    BIO_set_data(bio, NULL); // null for start stage
+    return 1;
+}
+
+static int custom_bio_free(BIO *bio) {
+    BIO_set_data(bio, NULL);
+    return 1;
+}
+
+BIO_METHOD *bio_custom_method = NULL;
+
+extern "C" {
+void bio_sock_rx_cb(xlio_socket_t sock, uintptr_t userdata_sq, void *data,
+                    size_t len, struct xlio_buf *buf)
+{
+    sockinfo_tcp *si = reinterpret_cast<sockinfo_tcp *>(sock);
+    si->m_rx_ready_list_bio_buf_lock.lock();
+    if(si->m_rx_ready_list_bio_buf.size()==0) {
+        si->m_rx_ready_list_bio_buf_offset=0;
+    }
+    buf->userdata = (uintptr_t)data;
+    si->m_rx_ready_list_bio_buf.push_back(buf);
+    si->m_rx_ready_list_bio_len.push_back(len);
+    si->data_in_bio+=len;
+    si->m_rx_ready_list_bio_buf_lock.unlock();
+    NOT_IN_USE(userdata_sq);
+    NOT_IN_USE(data);
+}
+static long custom_bio_ctrl(BIO *bio, int cmd, long num, void *ptr) {
+    xlio_socket_t xlio_sock = (xlio_socket_t)BIO_get_data(bio);
+    sockinfo_tcp *si = reinterpret_cast<sockinfo_tcp *>(xlio_sock);
+    NOT_IN_USE(num);
+    NOT_IN_USE(ptr);
+    switch (cmd) {
+        case BIO_CTRL_FLUSH:
+            return 1;
+
+        case BIO_CTRL_PENDING:
+            {
+                return si->data_in_bio-si->m_rx_ready_list_bio_buf_offset;
+            }
+        default:
+            return 0; 
+    }
+}
+
+BIO_METHOD *custom_bio_method() {
+    if (bio_custom_method == NULL) {
+        bio_custom_method = BIO_meth_new(BIO_TYPE_SOURCE_SINK, "Custom BIO for BELOVED XLIO");
+        BIO_meth_set_write(bio_custom_method, custom_bio_write); //called on ssl_write
+        BIO_meth_set_read(bio_custom_method, custom_bio_read); //called on ssl_read
+        BIO_meth_set_ctrl(bio_custom_method, custom_bio_ctrl); // Set control function
+        BIO_meth_set_create(bio_custom_method, custom_bio_new); // when BIO_new called
+        BIO_meth_set_destroy(bio_custom_method, custom_bio_free);// when ssl_free called
+    }
+    return bio_custom_method;
+}
 }
