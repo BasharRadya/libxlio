@@ -699,13 +699,10 @@ inline int epoll_wait_helper(int __epfd, struct epoll_event *__events, int __max
         epoll_wait_call epcall(extra_events_buffer, nullptr, __epfd, __events, __maxevents,
                                __timeout, __sigmask);
 
-        int rc = epcall.get_current_events(); // returns ready nfds
-        if (rc <= 0) {
-            // if no ready nfds available then check all lower level queues (XLIO ring's and OS
-            // queues)
-            epcall.init_offloaded_fds();
-            rc = epcall.call();
-        }
+        epcall.get_current_events(); // returns ready nfds
+        // // Always poll for additional events in epoll - removed early exit optimization
+        epcall.init_offloaded_fds();
+        int rc = epcall.call();
 
         srdr_logfunc_exit("rc = %d", rc);
         return rc;
