@@ -93,7 +93,8 @@ void config_printer::print_to_log()
                  &config_printer::print_progress_engine_interval},
                 // NOP - handled by prev case CONFIG_VAR_PROGRESS_ENGINE_INTERVAL
                 {CONFIG_VAR_PROGRESS_ENGINE_WCE_MAX, &config_printer::print_nothing},
-                {CONFIG_VAR_QP_COMPENSATION_LEVEL, &config_printer::print_qp_compensation_level}
+                {CONFIG_VAR_QP_COMPENSATION_LEVEL, &config_printer::print_qp_compensation_level},
+                {CONFIG_VAR_REDIS_IO_THREADS, &config_printer::print_redis_io_threads}
 #if defined(DEFINED_NGINX)
                 ,
                 {CONFIG_VAR_NGINX_WORKERS_NUM, &config_printer::print_nginx_workers_num}
@@ -164,6 +165,12 @@ void config_printer::print_nothing(const std::string & /*key*/, const std::strin
 void config_printer::print_qp_compensation_level(const std::string &key, const std::string &title)
 {
     LOG_NUM_PARAM(title.c_str(), m_mce_sys_var.qp_compensation_level, m_mce_sys_var.rx_num_wr / 2U,
+                  key.c_str());
+}
+
+void config_printer::print_redis_io_threads(const std::string &key, const std::string &title)
+{
+    LOG_NUM_PARAM(title.c_str(), m_mce_sys_var.redis_io_threads, MCE_DEFAULT_REDIS_IO_THREADS,
                   key.c_str());
 }
 

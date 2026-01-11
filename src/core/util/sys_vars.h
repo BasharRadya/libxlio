@@ -477,6 +477,7 @@ public:
     uint32_t tcp_send_buffer_size;
     uint32_t tx_segs_ring_batch_tcp;
     uint32_t tx_segs_pool_batch_tcp;
+    uint32_t redis_io_threads;
     struct {
         alloc_t memalloc;
         free_t memfree;
@@ -698,6 +699,7 @@ extern mce_sys_var &safe_mce_sys();
 #define SYS_VAR_TCP_SEND_BUFFER_SIZE "XLIO_TCP_SEND_BUFFER_SIZE"
 #define SYS_VAR_SKIP_POLL_IN_RX      "XLIO_SKIP_POLL_IN_RX"
 #define SYS_VAR_MULTILOCK            "XLIO_MULTILOCK"
+#define SYS_VAR_REDIS_IO_THREADS     "XLIO_REDIS_IO_THREADS"
 
 #define CONFIG_VAR_PRINT_REPORT        "monitor.exit_report"
 #define CONFIG_VAR_LOG_LEVEL           "monitor.log.level"
@@ -851,6 +853,7 @@ extern mce_sys_var &safe_mce_sys();
 #define CONFIG_VAR_TCP_SEND_BUFFER_SIZE "network.protocols.tcp.wmem"
 #define CONFIG_VAR_SKIP_POLL_IN_RX      "performance.polling.skip_cq_on_rx"
 #define CONFIG_VAR_MULTILOCK            "performance.threading.mutex_over_spinlock"
+#define CONFIG_VAR_REDIS_IO_THREADS     "applications.redis.io_threads"
 
 /*
  * This block consists of default values for library specific
@@ -1011,6 +1014,7 @@ extern mce_sys_var &safe_mce_sys();
 #define MCE_ALIGNMENT                  ((unsigned long)63)
 #define MCE_DEFAULT_SKIP_POLL_IN_RX    (SKIP_POLL_IN_RX_DISABLE)
 #define MCE_DEFAULT_MULTILOCK          (MULTILOCK_SPIN)
+#define MCE_DEFAULT_REDIS_IO_THREADS   (0)
 
 /*
  * This block consists of auxiliary constants

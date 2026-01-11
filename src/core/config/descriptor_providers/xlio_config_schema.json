@@ -1331,6 +1331,19 @@
                         }
                     },
                     "additionalProperties": false
+                },
+                "redis": {
+                    "type": "object",
+                    "description": "Redis-specific optimizations.",
+                    "properties": {
+                        "io_threads": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Redis IO threads",
+                            "description": "Maps to XLIO_REDIS_IO_THREADS environment variable.\nControls the number of IO threads for Redis."
+                        }
+                    },
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": false
