@@ -923,6 +923,7 @@ void mce_sys_var::get_env_params()
     tcp_send_buffer_size = MCE_DEFAULT_TCP_SEND_BUFFER_SIZE;
     skip_poll_in_rx = MCE_DEFAULT_SKIP_POLL_IN_RX;
     multilock = MCE_DEFAULT_MULTILOCK;
+    redis_io_threads = MCE_DEFAULT_REDIS_IO_THREADS;
 
     read_hv();
 
@@ -1815,6 +1816,10 @@ void mce_sys_var::get_env_params()
             temp = 0;
         }
         multilock = (multilock_t)temp;
+    }
+
+    if ((env_ptr = getenv(SYS_VAR_REDIS_IO_THREADS))) {
+        redis_io_threads = (uint32_t)atoi(env_ptr);
     }
 }
 
@@ -2897,6 +2902,8 @@ void mce_sys_var::configure_application_specifics(const config_registry &registr
     set_value_from_registry_if_exists(app.distribute_cq_interrupts,
                                       "applications.nginx.distribute_cq", registry);
 #endif
+
+    set_value_from_registry_if_exists(redis_io_threads, CONFIG_VAR_REDIS_IO_THREADS, registry);
 }
 
 void mce_sys_var::configure_syscall_behavior(const config_registry &registry)

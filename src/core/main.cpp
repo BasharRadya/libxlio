@@ -844,6 +844,8 @@ void print_env_vars_xlio_global_settings()
                       (safe_mce_sys().multilock == MULTILOCK_SPIN ? "Spin " : "Mutex"));
     VLOG_PARAM_NUMBER("Worker Threads", safe_mce_sys().worker_threads, MCE_DEFAULT_WORKER_THREADS,
                       SYS_VAR_WORKER_THREADS);
+    VLOG_PARAM_NUMBER("Redis IO threads", safe_mce_sys().redis_io_threads,
+                      MCE_DEFAULT_REDIS_IO_THREADS, SYS_VAR_REDIS_IO_THREADS);
     vlog_printf(VLOG_INFO,
                 "---------------------------------------------------------------------------\n");
 }

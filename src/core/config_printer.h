@@ -87,6 +87,8 @@ private:
 
     void print_qp_compensation_level(const std::string &key, const std::string &title);
 
+    void print_redis_io_threads(const std::string &key, const std::string &title);
+
 #if defined(DEFINED_NGINX)
     void print_nginx_workers_num(const std::string &key, const std::string &title);
 #endif
