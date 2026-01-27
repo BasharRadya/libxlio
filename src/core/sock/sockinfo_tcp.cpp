@@ -1137,8 +1137,8 @@ void sockinfo_tcp::tcp_timer()
 
     tcp_tmr(&m_pcb);
 
-    return_pending_rx_buffs();
-    return_pending_tx_buffs();
+    //return_pending_rx_buffs();
+    //return_pending_tx_buffs();
 }
 
 bool sockinfo_tcp::prepare_dst_to_send(bool is_accepted_socket /* = false */)
@@ -3529,6 +3529,19 @@ sockinfo_tcp *sockinfo_tcp::accept_clone()
     }
     if (si->m_ring_alloc_log_tx != m_ring_alloc_log_tx) {
         si->set_ring_logic_tx(m_ring_alloc_log_tx);
+    }
+
+    if (m_ring_alloc_log_rx.get_ring_alloc_logic() == RING_LOGIC_REDIS_8) {
+        uint32_t num_threads = safe_mce_sys().redis_io_threads;
+        // Distribution for Worker Threads (1 to num_threads-1) based on fd hash
+        // Main thread stays on Index 0
+        uint32_t fd_index = (si->get_fd() % (num_threads - 1)) + 1;
+        si->m_ring_alloc_log_rx.set_user_id_key(fd_index);
+        si->m_ring_alloc_log_tx.set_user_id_key(fd_index);
+        // Re-initialize the RX engine to pick up the new user_id key
+        si->set_ring_logic_rx(si->m_ring_alloc_log_rx);
+
+
     }
 
     // listen flow for incoming socket

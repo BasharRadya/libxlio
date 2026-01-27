@@ -96,8 +96,8 @@ mem_buf_desc_t *cq_mgr_rx_strq::next_stride()
 void cq_mgr_rx_strq::return_stride(mem_buf_desc_t *desc)
 {
     _stride_cache.push_back(desc);
-
-    if (unlikely(_stride_cache.size() >= safe_mce_sys().strq_strides_compensation_level * 2U)) {
+    return;
+    if (unlikely(_stride_cache.size() >= safe_mce_sys().strq_strides_compensation_level * 2000U)) {
         g_buffer_pool_rx_stride->put_buffers_thread_safe(
             &_stride_cache, _stride_cache.size() - safe_mce_sys().strq_strides_compensation_level);
     }

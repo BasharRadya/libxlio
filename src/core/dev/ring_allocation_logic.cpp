@@ -68,6 +68,9 @@ uint64_t ring_allocation_logic::calc_res_key_by_logic()
     case RING_LOGIC_PER_CORE_ATTACH_THREADS:
         res_key = sched_getcpu();
         break;
+    case RING_LOGIC_REDIS_8:
+        res_key = m_res_key.get_user_id_key();
+        break;
         BULLSEYE_EXCLUDE_BLOCK_START
     case RING_LOGIC_PER_OBJECT:
         res_key = reinterpret_cast<uint64_t>(m_source.m_object);

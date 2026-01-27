@@ -43,6 +43,7 @@ typedef enum {
     RING_LOGIC_PER_CORE = 30,
     RING_LOGIC_PER_CORE_ATTACH_THREADS = 31,
     RING_LOGIC_PER_OBJECT = 32,
+    RING_LOGIC_REDIS_8 = 40,
     RING_LOGIC_LAST
 } ring_logic_t;
 

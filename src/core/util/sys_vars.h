@@ -56,6 +56,7 @@ static inline bool is_ring_logic_valid(ring_logic_t logic)
     case RING_LOGIC_PER_THREAD:
     case RING_LOGIC_PER_CORE:
     case RING_LOGIC_PER_CORE_ATTACH_THREADS:
+    case RING_LOGIC_REDIS_8:
         return true;
     default:
         return false;
@@ -77,6 +78,8 @@ static inline const char *ring_logic_str(ring_logic_t logic)
         return "(Ring per core)";
     case RING_LOGIC_PER_CORE_ATTACH_THREADS:
         return "(Ring per core - attach threads)";
+    case RING_LOGIC_REDIS_8:
+        return "(Ring per redis 8 thread)";
     default:
         break;
     }

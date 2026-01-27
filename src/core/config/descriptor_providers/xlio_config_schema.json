@@ -735,7 +735,8 @@
                                                 10,
                                                 20,
                                                 30,
-                                                31
+                                                31,
+                                                40
                                             ],
                                             "default": 20
                                         },
@@ -747,13 +748,14 @@
                                                 "per_socket",
                                                 "per_thread",
                                                 "per_cpuid",
-                                                "per_core"
+                                                "per_core",
+                                                "per_redis_8"
                                             ],
                                             "default": "per_thread"
                                         }
                                     ],
                                     "title": "TX ring allocation logic",
-                                    "description": "Maps to XLIO_RING_ALLOCATION_LOGIC_TX environment variable.\nRing allocation logic is used to separate the traffic to different rings.\nBy default all sockets use the same ring for both RX and TX over the same interface.\nEven when specifying the logic to be per socket or thread, for different interfaces we use different rings.\nThis is useful when tuning for a multi-threaded application and aiming for HW resource separation.\nWarning: This feature might hurt performance for applications which their main processing loop is based on\nselect() and/or poll().\nThe logic options are:\n   - \"per_interface\" or 0 - Ring per interface\n   - \"per_ip_address\" or 1 - Ring per ip address (using ip address)\n   - \"per_socket\" or 10 - Ring per socket (using socket fd as separator)\n   - \"per_thread\" or 20 - Ring per thread (using the id of the thread in which the socket was created)\n   - \"per_cpuid\" or 30 - Ring per core (using cpu id)\n   - \"per_core\" or 31 - Ring per core - attach threads : attach each thread to a cpu core"
+                                    "description": "Maps to XLIO_RING_ALLOCATION_LOGIC_TX environment variable.\nRing allocation logic is used to separate the traffic to different rings.\nBy default all sockets use the same ring for both RX and TX over the same interface.\nEven when specifying the logic to be per socket or thread, for different interfaces we use different rings.\nThis is useful when tuning for a multi-threaded application and aiming for HW resource separation.\nWarning: This feature might hurt performance for applications which their main processing loop is based on\nselect() and/or poll().\nThe logic options are:\n   - \"per_interface\" or 0 - Ring per interface\n   - \"per_ip_address\" or 1 - Ring per ip address (using ip address)\n   - \"per_socket\" or 10 - Ring per socket (using socket fd as separator)\n   - \"per_thread\" or 20 - Ring per thread (using the id of the thread in which the socket was created)\n   - \"per_cpuid\" or 30 - Ring per core (using cpu id)\n   - \"per_core\" or 31 - Ring per core - attach threads : attach each thread to a cpu core\n   - \"per_redis_8\" or 40 - Ring per redis 8"
                                 },
                                 "migration_ratio": {
                                     "type": "integer",
@@ -824,7 +826,8 @@
                                                 10,
                                                 20,
                                                 30,
-                                                31
+                                                31,
+                                                40
                                             ],
                                             "default": 20
                                         },
@@ -836,13 +839,14 @@
                                                 "per_socket",
                                                 "per_thread",
                                                 "per_cpuid",
-                                                "per_core"
+                                                "per_core",
+                                                "per_redis_8"
                                             ],
                                             "default": "per_thread"
                                         }
                                     ],
                                     "title": "RX ring allocation logic",
-                                    "description": "Maps to XLIO_RING_ALLOCATION_LOGIC_RX environment variable.\nControls how reception rings are allocated and separated.\nBy default all sockets use the same ring for both RX and TX over the same interface.\nEven when specifying the logic to be per socket or thread, for different interfaces we use different rings.\nThis is useful when tuning for a multi-threaded application and aiming for HW resource separation.\nWarning: This feature might hurt performance for applications which their main processing loop is based on\nselect() and/or poll().\nThe logic options are:\n   - \"per_interface\" or 0 - Ring per interface\n   - \"per_ip_address\" or 1 - Ring per ip address (using ip address)\n   - \"per_socket\" or 10 - Ring per socket (using socket fd as separator)\n   - \"per_thread\" or 20 - Ring per thread (using the id of the thread in which the socket was created)\n   - \"per_cpuid\" or 30 - Ring per core (using cpu id)\n   - \"per_core\" or 31 - Ring per core - attach threads : attach each thread to a cpu core"
+                                    "description": "Maps to XLIO_RING_ALLOCATION_LOGIC_RX environment variable.\nControls how reception rings are allocated and separated.\nBy default all sockets use the same ring for both RX and TX over the same interface.\nEven when specifying the logic to be per socket or thread, for different interfaces we use different rings.\nThis is useful when tuning for a multi-threaded application and aiming for HW resource separation.\nWarning: This feature might hurt performance for applications which their main processing loop is based on\nselect() and/or poll().\nThe logic options are:\n   - \"per_interface\" or 0 - Ring per interface\n   - \"per_ip_address\" or 1 - Ring per ip address (using ip address)\n   - \"per_socket\" or 10 - Ring per socket (using socket fd as separator)\n   - \"per_thread\" or 20 - Ring per thread (using the id of the thread in which the socket was created)\n   - \"per_cpuid\" or 30 - Ring per core (using cpu id)\n   - \"per_core\" or 31 - Ring per core - attach threads : attach each thread to a cpu core\n   - \"per_redis_8\" or 40 - Ring per redis 8"
                                 },
                                 "migration_ratio": {
                                     "type": "integer",

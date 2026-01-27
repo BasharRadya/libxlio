@@ -3051,6 +3051,21 @@ void mce_sys_var::fixup_params()
         select_poll_num = -1;
         progress_engine_interval_msec = 0;
     }
+
+    if ((ring_allocation_logic_rx == RING_LOGIC_REDIS_8 ||
+         ring_allocation_logic_tx == RING_LOGIC_REDIS_8) &&
+        redis_io_threads <= 1) {
+        vlog_printf(VLOG_WARNING,
+                    "RING_LOGIC_REDIS_8 is used but redis_io_threads is %d (expected > 1). "
+                    "Falling back to RING_LOGIC_PER_INTERFACE.\n",
+                    redis_io_threads);
+        if (ring_allocation_logic_rx == RING_LOGIC_REDIS_8) {
+            ring_allocation_logic_rx = RING_LOGIC_PER_INTERFACE;
+        }
+        if (ring_allocation_logic_tx == RING_LOGIC_REDIS_8) {
+            ring_allocation_logic_tx = RING_LOGIC_PER_INTERFACE;
+        }
+    }
 }
 
 void set_env_params()

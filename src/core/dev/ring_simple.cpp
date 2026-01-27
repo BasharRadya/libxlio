@@ -817,14 +817,14 @@ mem_buf_desc_t *ring_simple::get_tx_buffers(pbuf_type type, uint32_t n_num_mem_b
 void ring_simple::return_to_global_pool()
 {
     if (unlikely(m_tx_pool.size() > (m_tx_num_bufs / 2) &&
-                 m_tx_num_bufs >= RING_TX_BUFS_COMPENSATE * 2)) {
+                 m_tx_num_bufs >= RING_TX_BUFS_COMPENSATE * 2000)) {
         int return_bufs = m_tx_pool.size() / 2;
         m_tx_num_bufs -= return_bufs;
         m_p_ring_stat->n_tx_num_bufs = m_tx_num_bufs;
         g_buffer_pool_tx->put_buffers_thread_safe(&m_tx_pool, return_bufs);
     }
     if (unlikely(m_zc_pool.size() > (m_zc_num_bufs / 2) &&
-                 m_zc_num_bufs >= RING_TX_BUFS_COMPENSATE * 2)) {
+                 m_zc_num_bufs >= RING_TX_BUFS_COMPENSATE * 2000)) {
         int return_bufs = m_zc_pool.size() / 2;
         m_zc_num_bufs -= return_bufs;
         m_p_ring_stat->n_zc_num_bufs = m_zc_num_bufs;
