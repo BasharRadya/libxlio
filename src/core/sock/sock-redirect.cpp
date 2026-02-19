@@ -221,9 +221,12 @@ bool handle_close(int fd, bool cleanup, bool passthrough)
 
     if (g_p_fd_collection) {
         // Remove fd from all existing epoll sets
-        g_p_fd_collection->remove_from_all_epfds(fd, passthrough);
+        sockinfo *sockfd = g_p_fd_collection->get_sockfd(fd);
+        bool is_epfd = fd_collection_get_epfd(fd);
+        if(sockfd || is_epfd) {
+            g_p_fd_collection->remove_from_all_epfds(fd, passthrough);
+        }
 
-        sockinfo *sockfd = fd_collection_get_sockfd(fd);
         if (sockfd) {
             // Don't call close(2) for objects without a shadow socket (TCP incoming sockets).
             to_close_now = !passthrough && sockfd->is_shadow_socket_present();
@@ -236,7 +239,7 @@ bool handle_close(int fd, bool cleanup, bool passthrough)
                 to_close_now = false;
             }
         }
-        if (fd_collection_get_epfd(fd)) {
+        if (is_epfd) {
             g_p_fd_collection->del_epfd(fd, cleanup);
         }
 
