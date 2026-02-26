@@ -136,6 +136,44 @@ rc=$(($rc+$?))
 eval "${sudo_cmd} $timeout_exe env XLIO_WORKER_THREADS=3 GTEST_TAP=2 LD_PRELOAD=$gtest_lib $gtest_app $gtest_opt --gtest_filter=$worker_threads_filter --gtest_output=xml:${WORKSPACE}/${prefix}/test-worker-threads-not-pow2.xml"
 rc=$(($rc+$?))
 
+# Passthrough tests
+
+passthrough_filter="tcp_listen_connect_nb.server_client_nb"
+
+# Passthrough via non-offloadable NIC (loopback)
+
+# worker threads mode
+gtest_opt_lo="--addr=127.0.0.1,127.0.0.1"
+eval "${sudo_cmd} $timeout_exe env XLIO_WORKER_THREADS=1 GTEST_TAP=2 LD_PRELOAD=$gtest_lib $gtest_app $gtest_opt_lo --gtest_filter=$passthrough_filter --gtest_output=xml:${WORKSPACE}/${prefix}/test-passthrough-loopback-wt.xml"
+rc=$(($rc+$?))
+
+# R2C mode
+eval "${sudo_cmd} $timeout_exe env GTEST_TAP=2 LD_PRELOAD=$gtest_lib $gtest_app $gtest_opt_lo --gtest_filter=$passthrough_filter --gtest_output=xml:${WORKSPACE}/${prefix}/test-passthrough-loopback-r2c.xml"
+rc=$(($rc+$?))
+
+# Passthrough via XLIO offload rules
+######
+
+# Append passthrough rules to /etc/libxlio.conf, run tests, then remove them.
+server_ip=$(ip -f inet addr show net2 | awk '/inet / {print $2}' | cut -d/ -f1)
+passthrough_rules="use os tcp_client ${server_ip}:*:*:*\nuse os tcp_server ${server_ip}:*"
+eval "${sudo_cmd} cp /etc/libxlio.conf /etc/libxlio.conf.bak"
+eval "${sudo_cmd} bash -c 'printf \"\\n${passthrough_rules}\\n\" >> /etc/libxlio.conf'"
+
+# worker threads mode
+eval "${sudo_cmd} $timeout_exe env XLIO_WORKER_THREADS=1 GTEST_TAP=2 LD_PRELOAD=$gtest_lib $gtest_app $gtest_opt --gtest_filter=$passthrough_filter --gtest_output=xml:${WORKSPACE}/${prefix}/test-passthrough-rules-wt.xml"
+rc=$(($rc+$?))
+
+# R2C mode
+eval "${sudo_cmd} $timeout_exe env GTEST_TAP=2 LD_PRELOAD=$gtest_lib $gtest_app $gtest_opt --gtest_filter=$passthrough_filter --gtest_output=xml:${WORKSPACE}/${prefix}/test-passthrough-rules-r2c.xml"
+rc=$(($rc+$?))
+
+# Restore original libxlio.conf
+eval "${sudo_cmd} mv /etc/libxlio.conf.bak /etc/libxlio.conf"
+###### Passthrough via XLIO offload rules
+
+
+
 eval "${sudo_cmd} pkill -9 ${prj_service} 2>/dev/null || true"
 
 set -eE
