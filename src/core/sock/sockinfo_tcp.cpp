@@ -656,7 +656,11 @@ void sockinfo_tcp::add_tx_ring_to_group()
 
 void sockinfo_tcp::xlio_socket_event(int event, int value)
 {
-    if (is_xlio_socket()) {
+    /* Before accept_cb on accepted children, suppress app events CBs:
+     * m_parent != nullptr means the socket is a "half-open" incoming connection
+     * that hasn't reached the application yet, so we can't notify the app yet.
+     */
+    if (is_xlio_socket() && !m_parent) {
         /* poll_group::m_socket_event_cb must be always set. */
         m_p_group->m_socket_event_cb(reinterpret_cast<xlio_socket_t>(this), m_xlio_socket_userdata,
                                      event, value);
