@@ -93,7 +93,7 @@ runs_on_dockers:
      arch: 'x86_64',
      name: 'xlio_static.csbuild',
      uri: '$arch/$name',
-     tag: '20260427',
+     tag: '20260517',
      build_args: '--no-cache --target static',
      category: 'tool'
     }
