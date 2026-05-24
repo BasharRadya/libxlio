@@ -4587,7 +4587,7 @@ int sockinfo_tcp::tcp_setsockopt(int __level, int __optname, __const void *__opt
                     }
                     ops = dynamic_cast<sockinfo_tcp_ops_tls *>(m_ops);
                     if (ops) {
-                        si_tcp_loginfo("(TCP_ULP) val: tls, ULP is already TLS");
+                        si_tcp_logdbg("(TCP_ULP) val: tls, ULP is already TLS");
                         errno = EEXIST;
                         ret = -1;
                         break;
